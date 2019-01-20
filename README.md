@@ -8,15 +8,15 @@ How to use
 
 1. Clone the repository to folder you want using:
 
-    git clone https://github.com/rudolphalmeida/graphics_bundle
+        git clone https://github.com/rudolphalmeida/graphics_bundle
 
 2. The only dependency for the script is `Python 3` and `Selenium`. `Selenium` can be installed using the following command:
 
-    pip install selenium
+        pip install selenium
 
 3. The script can then be run using:
 
-    python graphics_bundle.py
+        python graphics_bundle.py
 
 Note
 ----
