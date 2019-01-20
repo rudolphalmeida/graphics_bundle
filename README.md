@@ -1,16 +1,29 @@
-# Graphics Bundle Creator for Packt
+Graphics Bundle Creator for Packt
+=================================
 
 `graphics_bundle.py` is a solution to automate the boring job of making a graphics bundle for Packt books.
 
-## Pre-requisites
+How to use
+----------
 
-The only dependency for the script is `Python 3` and `Selenium`. `Selenium` can be installed using the following command:
+1. Clone the repository to folder you want using:
+
+    git clone https://github.com/rudolphalmeida/graphics_bundle
+
+2. The only dependency for the script is `Python 3` and `Selenium`. `Selenium` can be installed using the following command:
 
     pip install selenium
 
-## Note
+3. The script can then be run using:
+
+    python graphics_bundle.py
+
+Note
+----
 
 + The code assumes that chapters are arranged in the final order
+
++ Please do not interact with the new Google Chrome instance opened by the script
 
 + The source for the graphics bundle will be writted to a file called `output.html`
 
