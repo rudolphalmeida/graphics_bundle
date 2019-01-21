@@ -10,7 +10,7 @@ How to use
 
         git clone https://github.com/rudolphalmeida/graphics_bundle
 
-2. The only dependency for the script is `Python 3` and `Selenium`. `Selenium` can be installed using the following command:
+2. The only dependency for the script is Python 3 and Selenium. Selenium can be installed using the following command:
 
         pip install selenium
 
@@ -21,14 +21,16 @@ How to use
 Note
 ----
 
-+ The code assumes that chapters are arranged in the final order
++ The code assumes that chapters are arranged in the final order.
 
-+ Please do not interact with the new Google Chrome instance opened by the script
++ Please do not interact with the new Google Chrome instance opened by the script.
 
-+ The source for the graphics bundle will be writted to a file called `output.html`
++ The source for the graphics bundle will be written to a file called `output.html`.
 
-+ After copying the contents of `output.html` to the book on CDP, please go through the bundle once to check for any unnecessary images or other errors
++ After copying the contents of `output.html` to the book on CDP, please go through the bundle once to check for any unnecessary images or other errors.
 
-+ There is some final text after the last chapter to avoid the last chapter from getting chopped off by CDP so make sure you ignore that page while creating the final PDF file
++ There is some final text after the last chapter to avoid the last chapter from getting chopped off by CDP so make sure you ignore that page while creating the final PDF file.
 
-+ I know solving CAPTCHAs is not fun. I am looking for a solution to that
++ The program includes formula images in the graphics bundle too. If your book had some you will have to manually remove them.
+
++ Slow internet or slow loading because of CDP can sometimes cause the program to fail. If you see any sort of `StaleElementReferenceException` in the error, then simply try running the script again.
