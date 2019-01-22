@@ -6,8 +6,21 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+import sys
+
 CHAPTER_HEADER = '<h1 class="mce-root CDPAlignLeft CDPAlign">Chapter {no}: {name}</h1>'
 IMAGE_TEMPLATE = '<p class="CDPAlignCenter CDPAlign">{img_tag}</p>'
+
+
+def find_chapters(driver):
+    # Find all chapters links on the Chapters tab of a book
+    elements = driver.find_elements_by_xpath(
+        "//span[@class='cdp-organizer-chapter-title']/span/a")
+
+    if elements:
+        return elements
+    else:
+        return False
 
 
 def find_images(driver):
@@ -18,14 +31,17 @@ def find_images(driver):
     # included in the GC. As a result we use the src attribute of the img
     # tag to determine images. All non-CDP images which are inside content
     # have `upload` in their URL
-    elements = driver.find_elements_by_xpath(
-        "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
-    )
+    elements = [
+        element.get_attribute("outerHTML")
+        for element in driver.find_elements_by_xpath(
+            "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
+        )
+    ]
 
     if elements:
         return elements
     else:
-        False
+        return False
 
 
 def process_chapter(driver, chap_no):
@@ -34,21 +50,23 @@ def process_chapter(driver, chap_no):
         "value")
 
     # Switch to content frame
-    wait = WebDriverWait(driver, 5)
-    wait.until(
-        EC.frame_to_be_available_and_switch_to_it((By.ID, "content_ifr")))
-    # driver.switch_to.frame("content_ifr")
+    try:
+        wait = WebDriverWait(driver, 5)
+        wait.until(
+            EC.frame_to_be_available_and_switch_to_it((By.ID, "content_ifr")))
+    except TimeoutException:
+        print("Failed to find `content_ifr` frame. Are we on the right page?")
+        driver.close()
+        sys.exit(-1)
 
-    # Find all images in a chapter. We wait for a maximum of 5s
+    # Find all images in a chapter. We wait for a maximum of 10s
     # to allow CDP to load. If after that no images are found we assume
     # that the chapter has no images in it
     try:
-        images = [
-            image.get_attribute("outerHTML")
-            for image in WebDriverWait(driver, 10).until(find_images)
-        ]
+        images = WebDriverWait(driver, 10).until(find_images)
     except TimeoutException:
         # The chapter *might* have no images
+        print("----Found no images in Chapter #{}".format(chap_no))
         return ""
 
     # Format chapter header using chapter name
@@ -84,14 +102,13 @@ def main():
     driver.get(book_url)
 
     print("Unfortunately I am a robot and cannot login :(")
-    print("I need you to login for me so I can do my work ;)")
+    print("I need you to login for me so I can do my work")
     print("If you are already logged in, just press Enter")
     print("Press Enter when you are done...")
 
     input("")  # Wait for user to login
 
-    chapters = driver.find_elements_by_xpath(
-        "//span[@class='cdp-organizer-chapter-title']/span/a")
+    chapters = WebDriverWait(driver, 3).until(find_chapters)
 
     book_gb_source = ""
 
@@ -99,8 +116,7 @@ def main():
         print("Processing Chapter #{}".format(chap_no))
 
         # We need to load the chapter list every time the page is opened
-        chapter = driver.find_elements_by_xpath(
-            "//span[@class='cdp-organizer-chapter-title']/span/a")[chap_no - 1]
+        chapter = WebDriverWait(driver, 3).until(find_chapters)[chap_no - 1]
 
         driver.get(chapter.get_attribute("href"))  # Visit chapter
 
