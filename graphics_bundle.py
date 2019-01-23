@@ -31,7 +31,17 @@ def find_images(driver):
     # included in the GC. As a result we use the src attribute of the img
     # tag to determine images. All non-CDP images which are inside content
     # have `upload` in their URL
-    elements = [
+    try:
+        elements = [
+            element.get_attribute("outerHTML")
+            for element in driver.find_elements_by_xpath(
+                "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
+            )
+        ]
+    except StaleElementReferenceException:
+        # Found a stale reference. We wait for some time (5s) and try again
+        time.sleep(5)
+        elements = [
         element.get_attribute("outerHTML")
         for element in driver.find_elements_by_xpath(
             "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
