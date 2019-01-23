@@ -4,9 +4,10 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
 import sys
+import time
 
 CHAPTER_HEADER = '<h1 class="mce-root CDPAlignLeft CDPAlign">Chapter {no}: {name}</h1>'
 IMAGE_TEMPLATE = '<p class="CDPAlignCenter CDPAlign">{img_tag}</p>'
