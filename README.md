@@ -21,6 +21,8 @@ How to use
 Note
 ----
 
++ I recommend using the `git clone` command to clone the repo instead of downloading the `.zip` file. That way you can easily update to the latest version using just a `git pull` command.
+
 + The code assumes that chapters are arranged in the final order.
 
 + Please do not interact with the new Google Chrome instance opened by the script.

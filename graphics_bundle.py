@@ -8,15 +8,44 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 
 import sys
 import time
+from html.parser import HTMLParser
 
 CHAPTER_HEADER = '<h1 class="mce-root CDPAlignLeft CDPAlign">Chapter {no}: {name}</h1>'
 IMAGE_TEMPLATE = '<p class="CDPAlignCenter CDPAlign">{img_tag}</p>'
 
 
+class IgnoreWidthHeightParser(HTMLParser):
+    """
+    HTMLParser subclass to parse a single tag and remove the `width` and
+    `height` attributes of the tag
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.attributes = ""  # str to hold useful attributes
+        super().__init__(*args, **kwargs)
+
+    def handle_starttag(self, tag, attrs):
+        for attr, value in attrs:
+            if attr not in ("width", "height"):
+                self.attributes += ' {}="{}" '.format(attr, value)
+
+
+def strip_img_width_height(tag):
+    """
+    Strip the `width` and `height` attribute of a single HTML img tag using
+    `IgnoreWidthHeightParser`
+    """
+    parser = IgnoreWidthHeightParser()
+    parser.feed(tag)  # Feed data to the parser
+    parser.close()
+    return "<img {}>".format(parser.attributes)  # Recreate HTML tag
+
+
 def find_chapters(driver):
     # Find all chapters links on the Chapters tab of a book
     elements = driver.find_elements_by_xpath(
-        "//span[@class='cdp-organizer-chapter-title']/span/a")
+        "//span[@class='cdp-organizer-chapter-title']/span/a"
+    )
 
     if elements:
         return elements
@@ -34,20 +63,28 @@ def find_images(driver):
     # have `upload` in their URL
     try:
         elements = [
-            element.get_attribute("outerHTML")
+            strip_img_width_height(element.get_attribute("outerHTML"))
             for element in driver.find_elements_by_xpath(
-                "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
+                (
+                    "//div/img[contains(@src, 'upload')] |"  # img in div
+                    "//p/img[contains(@src, 'upload')] |"  # img in paragraph
+                    "//td/img[contains(@src, 'upload')]"  # img in table
+                )
             )
         ]
     except StaleElementReferenceException:
         # Found a stale reference. We wait for some time (5s) and try again
         time.sleep(5)
         elements = [
-        element.get_attribute("outerHTML")
-        for element in driver.find_elements_by_xpath(
-            "//div/img[contains(@src, 'upload')] | //p/img[contains(@src, 'upload')]"
-        )
-    ]
+            strip_img_width_height(element.get_attribute("outerHTML"))
+            for element in driver.find_elements_by_xpath(
+                (
+                    "//div/img[contains(@src, 'upload')] |"
+                    "//p/img[contains(@src, 'upload')] |"
+                    "//td/img[contains(@src, 'upload')]"
+                )
+            )
+        ]
 
     if elements:
         return elements
@@ -57,14 +94,12 @@ def find_images(driver):
 
 def process_chapter(driver, chap_no):
     # Get chapter name stored in `value` of the `post_title` input
-    chapter_name = driver.find_element_by_name("post_title").get_attribute(
-        "value")
+    chapter_name = driver.find_element_by_name("post_title").get_attribute("value")
 
     # Switch to content frame
     try:
         wait = WebDriverWait(driver, 5)
-        wait.until(
-            EC.frame_to_be_available_and_switch_to_it((By.ID, "content_ifr")))
+        wait.until(EC.frame_to_be_available_and_switch_to_it((By.ID, "content_ifr")))
     except TimeoutException:
         print("Failed to find `content_ifr` frame. Are we on the right page?")
         driver.close()
@@ -86,7 +121,8 @@ def process_chapter(driver, chap_no):
     # Append images to GB
     for image in images:
         chapter_gb_source += IMAGE_TEMPLATE.format(
-            img_tag=image)  # Get img html source and append to GB source
+            img_tag=image
+        )  # Get img html source and append to GB source
 
     chapter_gb_source += "<pagebreak/>"
 
