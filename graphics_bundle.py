@@ -44,7 +44,7 @@ def strip_img_width_height(tag):
 def find_chapters(driver):
     # Find all chapters links on the Chapters tab of a book
     elements = driver.find_elements_by_xpath(
-        "//span[@class='cdp-organizer-chapter-title']/span/a"
+        "//tr[contains(@class, 'matter-type-chapter')]/td[2]/span[@class='cdp-organizer-chapter-title']/span/a"
     )
 
     if elements:
@@ -126,8 +126,7 @@ def process_chapter(driver, chap_no):
 
     chapter_gb_source += "<pagebreak/>"
 
-    # driver.switch_to_default_content()  # Switch to main chapter page
-    driver.switch_to.default_content()
+    driver.switch_to.default_content() # Switch to main chapter page
 
     return chapter_gb_source
 
