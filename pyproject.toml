@@ -2,8 +2,9 @@
 name = "graphics_bundle"
 version = "0.1.0"
 description = "Graphics bundle creator for Packt books on CDP"
-authors = ["Rudolph Almeida"]
+authors = ["Rudolph Almeida <rudolf1.almeida@gmail.com>"]
 license = "MIT"
+include = ["chromedriver.exe", "README.md"]
 
 [tool.poetry.dependencies]
 python = "^3.6 || ^3.7"
