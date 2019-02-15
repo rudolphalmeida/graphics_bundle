@@ -8,10 +8,48 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 
 import sys
 import time
+import threading
+import itertools
 from html.parser import HTMLParser
 
 CHAPTER_HEADER = '<h1 class="mce-root CDPAlignLeft CDPAlign">Chapter {no}: {name}</h1>'
 IMAGE_TEMPLATE = '<p class="CDPAlignCenter CDPAlign">{img_tag}</p>'
+
+
+class Spinner:
+    """
+    Spinner class representing a `spinner` that runs in a seperate thread
+    This class supports displaying a message (msg) and an exit message (`exit_msg`)
+    """
+
+    def __init__(self, msg, states=None):
+        if states is None:
+            states = ["[=  ]", "[ = ]", "[  =]", "[ = ]"]
+
+        self.states = states
+        self.msg = msg
+        self.done = threading.Event()  # Conditional Variable
+
+    def start(self, exit_msg):
+        self.spinner = threading.Thread(target=Spinner.spin, args=(self, exit_msg))
+        self.spinner.start()  # Start spinner in new thread
+
+    def spin(self, exit_msg):
+        write, flush = sys.stdout.write, sys.stdout.flush
+        for state in itertools.cycle(self.states):
+            prompt = "{} {}".format(state, self.msg)
+            write(prompt)  # Write state and message
+            flush()
+            write("\b" * len(prompt))  # Move cursor back to start
+            if self.done.wait(0.1):
+                break
+        # Write exit message after clearing old prompt
+        write(" " * len(prompt) + "\b" * len(prompt) + exit_msg)
+        flush()
+
+    def stop(self):
+        self.done.set()  # Set conditional variable...
+        self.spinner.join()  # ...and wait for thread to exit
 
 
 class IgnoreWidthHeightParser(HTMLParser):
@@ -126,7 +164,7 @@ def process_chapter(driver, chap_no):
 
     chapter_gb_source += "<pagebreak/>"
 
-    driver.switch_to.default_content() # Switch to main chapter page
+    driver.switch_to.default_content()  # Switch to main chapter page
 
     return chapter_gb_source
 
@@ -159,7 +197,7 @@ def main():
     book_gb_source = ""
 
     for chap_no in range(1, len(chapters) + 1):
-        print("Processing Chapter #{}".format(chap_no))
+        spinner = Spinner("Processing Chapter #{}".format(chap_no))
 
         # We need to load the chapter list every time the page is opened
         chapter = WebDriverWait(driver, 3).until(find_chapters)[chap_no - 1]
@@ -167,7 +205,9 @@ def main():
         driver.get(chapter.get_attribute("href"))  # Visit chapter
 
         # process each chapter...
+        spinner.start("Chapter #{} done...\n".format(chap_no))
         book_gb_source += process_chapter(driver, chap_no)
+        spinner.stop()
 
         driver.get(book_url)  # ...and go back to chapter list
 
