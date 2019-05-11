@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: graphics-bundle
+Version: 0.1.0
+Summary: Graphics bundle creator for Packt books on CDP
+Home-page: UNKNOWN
+Author: Rudolph Almeida
+Author-email: rudolf1.almeida@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.6,<4.0

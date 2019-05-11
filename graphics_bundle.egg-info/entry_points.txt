@@ -1,0 +1,3 @@
+[console_scripts]
+gbc = graphics_bundle:main
+
