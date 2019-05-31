@@ -63,9 +63,7 @@ def find_chapters(driver):
 def find_images(driver):
     # Find all images in chapter
     # img tags can be inside a div or a p tag
-    # We could use @class=CDPAlignCenter to find the exact div and p's
-    # But if someone has missed centering an image that img will not be
-    # included in the GC. As a result we use the src attribute of the img
+    # We use the src attribute of the img
     # tag to determine images. All non-CDP images which are inside content
     # have `upload` in their URL
     try:
@@ -95,10 +93,10 @@ async def download_and_save_image(image_no, url, book_code, chap_no):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
-                # TODO: Check file extension from URL
+                ext = url.split(".")[-1]
                 f = await aiofiles.open(
-                    "{book_code}\\Chapter {chap_no}\\{book_code}_{chap_no}_{image_no}.png".format(
-                        image_no=image_no, book_code=book_code, chap_no=chap_no
+                    "{book_code}\\Chapter {chap_no}\\{book_code}_{chap_no}_{image_no}.{ext}".format(
+                        image_no=image_no, book_code=book_code, chap_no=chap_no, ext=ext
                     ),
                     mode="wb",
                 )
@@ -135,7 +133,7 @@ async def process_chapter(driver, book_code, chap_no):
 
 
 def main():
-    print("Welcome to Graphics Bundle Creator for Packt...")
+    print("Welcome to Image Downloader for Packt...")
     book_code = input("Please enter the book code of the book: ")
     os.makedirs(book_code)
     print("I need the URL of the book")
