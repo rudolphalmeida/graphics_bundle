@@ -116,7 +116,7 @@ async def download_and_save_image(image_no, url, book_code, chap_no):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
-                ext = url.split(".")[-1]
+                ext = url.split(".")[-1].split("?")[0]
                 f = await aiofiles.open(
                     "{book_code}\\Chapter {chap_no}\\{book_code}_{chap_no}_{image_no}.{ext}".format(
                         image_no=image_no, book_code=book_code, chap_no=chap_no, ext=ext
