@@ -19,33 +19,56 @@ import aiofiles
 
 
 class Spinner:
+    """
+    Spinner class representing a spinner that runs in a separate thread
+    This class supports displaying a message (`msg`)
+    and an exit message (`exit_msg`) and also custom spinner styles by
+    settings a list or string of values for `states` in the constructor
+
+    Usage:
+    spinner = Spinner("Message to display while spinning")
+    spinner.start("Message to display after spinner is stopped")
+    spinner.stop()  # Stop spinner
+    """
+
     def __init__(self, msg, states=None):
         if states is None:
             states = ["[=  ]", "[ = ]", "[  =]", "[ = ]"]
 
         self.states = states
         self.msg = msg
-        self.done = threading.Event()
+        self.exit_msg = None
+        self.spinner = None
+        self.done = threading.Event()  # Conditional Variable to signal stop
 
-    def start(self, exit_msg):
-        self.spinner = threading.Thread(target=Spinner.spin, args=(self, exit_msg))
-        self.spinner.start()
+    def start(self):
+        if self.spinner is not None:
+            raise Exception("Cannot call start on an already started Spinner")
+        self.spinner = threading.Thread(target=Spinner.spin, args=(self,))
+        self.spinner.start()  # Start spinner in new thread
 
-    def spin(self, exit_msg):
+    def spin(self):
         write, flush = sys.stdout.write, sys.stdout.flush
+        prompt = ""
         for state in itertools.cycle(self.states):
             prompt = "{} {}".format(state, self.msg)
-            write(prompt)
+            write(prompt)  # Write state and message
             flush()
-            write("\b" * len(prompt))
+            write("\b" * len(prompt))  # Move cursor back to start
             if self.done.wait(0.1):
                 break
-        write(" " * len(prompt) + "\b" * len(prompt) + exit_msg)
+        # Write exit message after clearing old prompt
+        write(
+            " " * len(prompt) + "\b" * len(prompt) + self.exit_msg
+            if self.exit_msg
+            else ""
+        )
         flush()
 
-    def stop(self):
-        self.done.set()
-        self.spinner.join()
+    def stop(self, exit_msg):
+        self.exit_msg = exit_msg
+        self.done.set()  # Set conditional variable...
+        self.spinner.join()  # ...and wait for thread to exit
 
 
 def find_chapters(driver):
@@ -167,12 +190,12 @@ def main():
 
         driver.get(chapter.get_attribute("href"))  # Visit chapter
 
-        spinner.start("Chapter #{} done...\n".format(chap_no))
+        spinner.start()
 
         # process each chapter...
         asyncio.run(process_chapter(driver, book_code, chap_no))
 
-        spinner.stop()
+        spinner.stop("Chapter #{} done...\n".format(chap_no))
 
         driver.get(book_url)  # ...and go back to chapter list
 
