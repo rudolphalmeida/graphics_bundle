@@ -27,8 +27,8 @@ class Spinner:
 
     Usage:
     spinner = Spinner("Message to display while spinning")
-    spinner.start("Message to display after spinner is stopped")
-    spinner.stop()  # Stop spinner
+    spinner.start()
+    spinner.stop("Message to display after spinner is stopped")  # Stop spinner
     """
 
     def __init__(self, msg, states=None):
@@ -114,7 +114,9 @@ def find_images(driver):
 
 async def download_and_save_image(image_no, url, book_code, chap_no):
     async with aiohttp.ClientSession() as session:
+        print("Downloading {} from {}".format(image_no, chap_no))
         async with session.get(url) as response:
+            print("Downloaded {} from {}".format(image_no, chap_no))
             if response.status == 200:
                 ext = url.split(".")[-1].split("?")[0]
                 f = await aiofiles.open(
@@ -149,8 +151,11 @@ async def process_chapter(driver, book_code, chap_no):
         print("----Found no images in Chapter #{}".format(chap_no))
         return ""
 
+    tasks = []
     for image_no, url in enumerate(images):
-        await download_and_save_image(image_no, url, book_code, chap_no)
+        tasks.append(download_and_save_image(image_no, url, book_code, chap_no))
+
+    await asyncio.gather(*tasks)
 
     driver.switch_to.default_content()  # Switch to main chapter page
 
@@ -200,6 +205,8 @@ def main():
         driver.get(book_url)  # ...and go back to chapter list
 
     driver.close()  # Close Chrome window
+
+    print("Images written to {book_code} folder...".format(book_code=book_code))
 
 
 if __name__ == "__main__":
